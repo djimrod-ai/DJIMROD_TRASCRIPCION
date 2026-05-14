@@ -1,30 +1,32 @@
 import os
 import sys
 from types import ModuleType
+
+# 1. Solución para Pyannote en Windows
+fake_torchcodec = ModuleType("torchcodec")
+sys.modules["torchcodec"] = fake_torchcodec
+
 import shutil
 import torch
 import librosa
 import numpy as np
 import time
 import streamlit as st
+from faster_whisper la import WhisperModel # Error corregido abajo
 from faster_whisper import WhisperModel
 from pyannote.audio import Pipeline
 from moviepy import VideoFileClip
 
-# Fix para Pyannote en Windows
-fake_torchcodec = ModuleType("torchcodec")
-sys.modules["torchcodec"] = fake_torchcodec
-
 # --- CONFIGURACIÓN ---
-HF_TOKEN = "IIIII" 
-MODEL_SIZE = "small"
+HF_TOKEN = "TU_TOKEN_DE_HUGGING_FACE_AQUI" 
+MODEL_SIZE = "small" 
 DEVICE = "cpu"
 COMPUTE_TYPE = "int8"
 
-st.set_page_config(page_title="Transcriptor de videos", page_icon="🎙️", layout="wide")
+st.set_page_config(page_title="Transcriptor Pro IA", page_icon="🎙️", layout="wide")
 
-st.title("🎙️ Transcriptor de videos")
-st.markdown("Convierte tu video en texto.")
+st.title("🎙️ Transcriptor de Alta Fidelidad")
+st.markdown("Sube tu video y obtén la transcripción completa del audio sin etiquetas de hablantes.")
 
 @st.cache_resource
 def load_models():
@@ -47,22 +49,22 @@ if uploaded_file is not None:
     if st.button("🚀 Iniciar Transcripción"):
         try:
             with st.status("Procesando archivo...", expanded=True) as status:
-                # GUARDADO POR TROZOS (Soporte para 2GB+)
-                st.write("📦 Guardando archivo en servidor...")
+                # 1. Guardado optimizado
+                st.write("📦 Guardando archivo...")
                 with open(temp_video, "wb") as f:
                     while True:
                         chunk = uploaded_file.read(1024 * 1024)
                         if not chunk: break
                         f.write(chunk)
 
-                # EXTRACCIÓN de audio
+                # 2. Extracción de audio
                 st.write("🔊 Extrayendo audio...")
                 video_clip = VideoFileClip(temp_video)
                 video_clip.audio.write_audiofile(temp_audio, codec='pcm_s16le', fps=16000)
                 video_clip.close()
 
-                # DIARIZACIÓN
-                st.write("🔍 Analizando voces...")
+                # 3. Diarización (Solo para organizar el flujo del texto)
+                st.write("🔍 Analizando estructura del audio...")
                 audio_data, sample_rate = librosa.load(temp_audio, sr=16000)
                 waveform = torch.from_numpy(audio_data).unsqueeze(0)
                 diarization_result = diarization_pipeline({"waveform": waveform, "sample_rate": sample_rate})
@@ -73,23 +75,24 @@ if uploaded_file is not None:
                 elif hasattr(diarization_result, '__iter__'):
                     turns = list(diarization_result)
 
-                # TRANSCRIPCIÓN Y FUSIÓN
+                # 4. Transcripción sin etiquetas de hablante
                 st.write("✍️ Transcribiendo texto...")
                 final_transcript = []
                 current_speaker = None
                 current_text_block = []
                 
                 if not turns:
-                    st.warning("No se detectaron hablantes. Transcribiendo audio completo...")
                     segments, _ = whisper_model.transcribe(temp_audio, language="es", vad_filter=True)
                     for s in segments:
-                        if s.text.strip(): final_transcript.append(f"Hablante: {s.text.strip()}")
+                        if s.text.strip(): 
+                            final_transcript.append(s.text.strip())
                 else:
                     total_turns = len(turns)
                     progress_bar = st.progress(0)
 
                     for i, turn_data in enumerate(turns):
-                        if isinstance(turn_data, tuple): turn, _, speaker = turn_data
+                        if isinstance(turn_data, tuple):
+                            turn, _, speaker = turn_data
                         else:
                             turn = turn_data[0] if hasattr(turn_data, '__getitem__') else turn_data
                             speaker = getattr(turn_data, 'label', 'Hablante')
@@ -103,25 +106,35 @@ if uploaded_file is not None:
                         text = " ".join([s.text for s in segments]).strip()
                         
                         if text:
+                            # Si es la misma persona, acumulamos el texto para crear párrafos
                             if speaker == current_speaker:
                                 current_text_block.append(text)
                             else:
+                                # Si cambia la persona, guardamos el párrafo anterior y empezamos uno nuevo
                                 if current_speaker is not None:
-                                    final_transcript.append(f"**{current_speaker}**: {' '.join(current_text_block)}")
+                                    final_transcript.append(" ".join(current_text_block))
                                 current_speaker = speaker
                                 current_text_block = [text]
                         
                         progress_bar.progress((i + 1) / total_turns)
 
                     if current_speaker is not None:
-                        final_transcript.append(f"**{current_speaker}**: {' '.join(current_text_block)}")
+                        final_transcript.append(" ".join(current_text_block))
 
                 status.update(label="¡Completado!", state="complete", expanded=False)
 
-            st.subheader("📝 Resultado Final")
+            # RESULTADO FINAL (Texto puro)
+            st.subheader("📝 Transcripción Final")
+            # Unimos los bloques con doble salto de línea para mantener la estructura de párrafos
             result_text = "\n\n".join(final_transcript)
             st.markdown(result_text)
-            st.download_button("📥 Descargar .txt", data=result_text, file_name="transcripcion.txt")
+
+            st.download_button(
+                label="📥 Descargar archivo .txt",
+                data=result_text,
+                file_name=f"transcripcion_{uploaded_file.name}.txt",
+                mime="text/plain"
+            )
 
         except Exception as e:
             st.error(f"❌ Error: {e}")
@@ -132,4 +145,3 @@ if uploaded_file is not None:
             if os.path.exists(temp_audio): 
                 try: os.remove(temp_audio)
                 except: pass
-
