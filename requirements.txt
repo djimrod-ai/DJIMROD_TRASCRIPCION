@@ -1,0 +1,20 @@
+# Framework de Interfaz y Web
+streamlit
+fastapi
+uvicorn
+python-multipart
+
+# Procesamiento de Audio y Video
+moviepy
+librosa
+soundfile
+numpy
+
+# Motores de IA (Transcripción y Diarización)
+faster-whisper
+pyannote.audio
+
+# Base de Tensores y Cálculos (PyTorch)
+torch
+torchaudio
+torchvision
