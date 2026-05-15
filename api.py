@@ -2,7 +2,7 @@ import os
 import streamlit as st
 
 from faster_whisper import WhisperModel
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip
 
 # --- CONFIGURACIÓN ---
 MODEL_SIZE = "small"
