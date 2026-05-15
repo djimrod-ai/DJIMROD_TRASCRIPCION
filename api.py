@@ -12,7 +12,8 @@ import librosa
 import numpy as np
 import time
 import streamlit as st
-from faster_whisper la import WhisperModel # Error corregido abajo
+# api.py
+from faster_whisper import WhisperModel
 from faster_whisper import WhisperModel
 from pyannote.audio import Pipeline
 from moviepy import VideoFileClip
