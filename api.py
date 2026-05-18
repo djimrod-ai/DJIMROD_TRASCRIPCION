@@ -21,7 +21,7 @@ st.set_page_config(
 if 'bg_color' not in st.session_state:
     st.session_state.bg_color = "#FFFFFF" 
 if 'text_color' not in st.session_state:
-    st.session_state.text_color = "#FFFFFF"
+    st.session_state.text_color = "#FF0000"
 if 'accent_color' not in st.session_state:
     st.session_state.accent_color = "#1E3A8A"
 if 'result_bg' not in st.session_state:
