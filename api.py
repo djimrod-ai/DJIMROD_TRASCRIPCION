@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import streamlit as st
 import os
 import gc
@@ -16,24 +18,46 @@ st.set_page_config(
     layout="wide"
 )
 
-# CSS para mejorar la apariencia
-st.markdown("""
+if 'bg_color' not in st.session_state:
+    st.session_state.bg_color = "#FFFFFF" 
+if 'text_color' not in st.session_state:
+    st.session_state.text_color = "#1F2937"
+if 'accent_color' not in st.session_state:
+    st.session_state.accent_color = "#1E3A8A"
+if 'result_bg' not in st.session_state:
+    st.session_state.result_bg = "#F9F9F9" # Color inicial del cuadro de texto
+
+# Inyección de CSS Dinámico
+st.markdown(f"""
     <style>
-    .main-title {
+    /* Fondo de la aplicación */
+    html, body, .stApp, .main, .block-container, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
+        background-color: {st.session_state.bg_color} !important;
+    }}
+    /* Color de letras global */
+    p, span, label, .stMarkdown, .stMarkdown p {{
+        color: {st.session_state.text_color} !important;
+    }}
+    /* Título Principal */
+    .main-title {{
         text-align: center;
         font-size: 3rem;
         font-weight: 800;
-        color: #1E3A8A;
+        color: {st.session_state.accent_color} !important;
         margin-bottom: 20px;
-    }
-    .result-box {
-        background-color: #f9f9f9;
-        padding: 20px;
-        border-radius: 10px;
-        border: 1px solid #ddd;
+    }}
+    /* CUADRO DE RESULTADO PERSONALIZABLE */
+    .result-box {{
+        background-color: {st.session_state.result_bg} !important;
+        color: {st.session_state.text_color} !important;
+        padding: 25px;
+        border-radius: 15px;
+        border: 2px solid {st.session_state.accent_color};
         font-family: 'Courier New', Courier, monospace;
         line-height: 1.6;
-    }
+        box-shadow: 4px 4px 10px rgba(0,0,0,0.1);
+        white-space: pre-wrap;
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -175,5 +199,3 @@ if uploaded_file is not None:
                 if os.path.exists(st.session_state.tmp_video): os.remove(st.session_state.tmp_video)
             except: pass
             gc.collect()
-
-
