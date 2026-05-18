@@ -4,7 +4,7 @@ import gc
 import time
 import torch
 from faster_whisper import WhisperModel
-from moviepy.editor import VideoFileClip
+from moviepy import VideoFileClip, AudioFileClip, concatenate_videoclips
 import tempfile
 
 # =============================================================================
